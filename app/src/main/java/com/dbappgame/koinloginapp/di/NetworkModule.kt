@@ -1,23 +1,27 @@
 package com.dbappgame.koinloginapp.di
 
-import com.dbappgame.koinloginapp.data.service.LoginService
-import com.google.gson.Gson
-import io.ktor.client.*
+import com.dbappgame.koinloginapp.data.service.retrofit.LoginServiceRetrofit
+import com.dbappgame.koinloginapp.data.service.retrofit.LoginServiceRetrofitImp
+import com.dbappgame.koinloginapp.domain.LoginService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 
-val networkModule = module {
-    factory { provideHttpClient() }
+val networkModuleRetrofit = module {
+    factory { provideOkHttpClient() }
     single { provideRetrofit(get()) }
-    single { provideLoginService(get()) }
+    single { provideLoginServiceRetrofit(get()) }
+    singleOf(::LoginServiceRetrofitImp){
+        bind<LoginService>()
+    }
 }
 
-fun provideHttpClient(): OkHttpClient {
+fun provideOkHttpClient(): OkHttpClient {
     return OkHttpClient.Builder()
         .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
         .build()
@@ -30,6 +34,7 @@ fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         .build()
 }
 
-fun provideLoginService(retrofit: Retrofit): LoginService{
-    return retrofit.create(LoginService::class.java)
+fun provideLoginServiceRetrofit(retrofit: Retrofit): LoginServiceRetrofit {
+    return retrofit.create(LoginServiceRetrofit::class.java)
 }
+

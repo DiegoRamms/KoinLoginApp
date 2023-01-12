@@ -1,8 +1,9 @@
 package com.dbappgame.koinloginapp.data
 
+import android.util.Log
 import com.dbappgame.koinloginapp.data.model.LoggedInUser
 import com.dbappgame.koinloginapp.data.model.LoginRequest
-import com.dbappgame.koinloginapp.data.service.LoginService
+import com.dbappgame.koinloginapp.domain.LoginService
 import java.io.IOException
 
 /**
@@ -16,8 +17,9 @@ class LoginDataSource(private val service: LoginService) {
             //val fakeUser = LoggedInUser(java.util.UUID.randomUUID().toString(), "Jane Doe")
             val loginRequest = LoginRequest(appType = "MoneyLeneder", email, password)
             val response =service.doLogin(loginRequest)
-            Result.Success(LoggedInUser(response.dataInfo.uid,response.dataInfo.name,response.dataInfo.jwt))
+            Result.Success(LoggedInUser(response.data.uid,response.data.name,response.data.jwt))
         } catch (e: Throwable) {
+            Log.e("ErrorNetwork",e.toString())
             Result.Error(IOException("Error logging in", e))
         }
     }

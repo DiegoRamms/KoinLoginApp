@@ -22,7 +22,9 @@ import com.dbappgame.koinloginapp.R
 import com.dbappgame.koinloginapp.databinding.FragmentLoginBinding
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.qualifier.named
 
 class LoginFragment: Fragment() {
 

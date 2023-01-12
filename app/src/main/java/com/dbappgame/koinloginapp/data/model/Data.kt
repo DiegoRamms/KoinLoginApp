@@ -3,6 +3,7 @@ package com.dbappgame.koinloginapp.data.model
 
 import com.google.gson.annotations.SerializedName
 
+@kotlinx.serialization.Serializable
 data class Data(
     @SerializedName("code")
     val code: String,

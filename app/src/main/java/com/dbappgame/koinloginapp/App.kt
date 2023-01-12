@@ -1,10 +1,7 @@
 package com.dbappgame.koinloginapp
 
 import android.app.Application
-import com.dbappgame.koinloginapp.di.appModule
-import com.dbappgame.koinloginapp.di.dataSourceModule
-import com.dbappgame.koinloginapp.di.networkModule
-import com.dbappgame.koinloginapp.di.repositoryModule
+import com.dbappgame.koinloginapp.di.*
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -18,7 +15,7 @@ class App: Application() {
         startKoin {
             androidLogger(Level.DEBUG)
             androidContext(this@App)
-            modules(appModule, repositoryModule, dataSourceModule, networkModule)
+            modules(appModule, repositoryModule, dataSourceModule, stringModule, networkModuleKtor)
         }
 
     }
