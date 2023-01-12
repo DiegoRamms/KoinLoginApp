@@ -16,7 +16,7 @@ class LoginDataSource(private val service: LoginService) {
             //val fakeUser = LoggedInUser(java.util.UUID.randomUUID().toString(), "Jane Doe")
             val loginRequest = LoginRequest(appType = "MoneyLeneder", email, password)
             val response =service.doLogin(loginRequest)
-            Result.Success(LoggedInUser(response.dataInfo.uid,response.dataInfo.name))
+            Result.Success(LoggedInUser(response.dataInfo.uid,response.dataInfo.name,response.dataInfo.jwt))
         } catch (e: Throwable) {
             Result.Error(IOException("Error logging in", e))
         }

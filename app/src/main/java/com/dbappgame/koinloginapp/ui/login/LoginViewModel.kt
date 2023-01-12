@@ -11,6 +11,8 @@ import com.dbappgame.koinloginapp.data.Result
 import com.dbappgame.koinloginapp.R
 import com.dbappgame.koinloginapp.domain.LoginRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel() {
@@ -18,8 +20,8 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
     private val _loginForm = MutableLiveData<LoginFormState>()
     val loginFormState: LiveData<LoginFormState> = _loginForm
 
-    private val _loginResult = MutableLiveData<LoginResult>()
-    val loginResult: LiveData<LoginResult> = _loginResult
+    private val _loginResult = Channel<LoginResult>()
+    val loginResult = _loginResult.receiveAsFlow()
 
     fun login(email: String, password: String) {
 
@@ -27,10 +29,10 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
             val result = loginRepository.login(email, password)
 
             if (result is Result.Success) {
-                _loginResult.postValue(
-                    LoginResult(success = LoggedInUserView(displayName = result.data.displayName)))
+                _loginResult.send(
+                    LoginResult(success = LoggedInUserView(displayName = result.data.displayName, result.data.jwt)))
             } else {
-                _loginResult.postValue(LoginResult(error = R.string.login_failed))
+                _loginResult.send(LoginResult(error = R.string.login_failed))
             }
         }
 

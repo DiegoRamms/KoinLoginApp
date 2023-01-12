@@ -3,41 +3,56 @@ package com.dbappgame.koinloginapp.ui.login
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
 import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
+import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
 import com.dbappgame.koinloginapp.BuildConfig
 import com.dbappgame.koinloginapp.R
-import com.dbappgame.koinloginapp.databinding.ActivityLoginBinding
+import com.dbappgame.koinloginapp.databinding.FragmentLoginBinding
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class LoginActivity : AppCompatActivity() {
+class LoginFragment: Fragment() {
 
-    private val  loginViewModel by viewModel<LoginViewModel>()
-    private lateinit var binding: ActivityLoginBinding
+    private var _binding: FragmentLoginBinding? = null
+    private val binding get() = _binding!!
+    private val loginViewModel by viewModel<LoginViewModel>()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentLoginBinding.inflate(layoutInflater)
+        return binding.root
+    }
 
-        supportActionBar?.hide()
-        binding = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         val username = binding.user
         val password = binding.password
         val login = binding.login
-        //val loading = binding.loading
+        val loading = binding.loading
 
         if (BuildConfig.DEBUG){
             username.setText("diego1@gmail.com")
             password.setText("123442332342345")
         }
 
-        loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
-            val loginState = it ?: return@Observer
+        loginViewModel.loginFormState.observe(viewLifecycleOwner) {
+            val loginState = it ?: return@observe
 
             // disable login button unless both username / password is valid
             login.isEnabled = loginState.isDataValid
@@ -48,23 +63,30 @@ class LoginActivity : AppCompatActivity() {
             if (loginState.passwordError != null) {
                 password.error = getString(loginState.passwordError)
             }
-        })
+        }
 
-        loginViewModel.loginResult.observe(this@LoginActivity, Observer {
-            val loginResult = it ?: return@Observer
 
-           // loading.visibility = View.GONE
-            if (loginResult.error != null) {
-                showLoginFailed(loginResult.error)
+        viewLifecycleOwner.lifecycleScope.launch(){
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
+                loginViewModel.loginResult.collect{
+                    val loginResult = it
+
+                    loading.visibility = View.GONE
+                    if (loginResult.error != null) {
+                        showLoginFailed(loginResult.error)
+                    }
+                    if (loginResult.success != null) {
+                        updateUiWithUser(loginResult.success)
+                    }
+                    //setResult(Activity.RESULT_OK)
+
+                    //Complete and destroy login activity once successful
+                    //finish()
+                }
             }
-            if (loginResult.success != null) {
-                updateUiWithUser(loginResult.success)
-            }
-            //setResult(Activity.RESULT_OK)
+        }
 
-            //Complete and destroy login activity once successful
-            //finish()
-        })
+
 
         username.afterTextChanged {
             loginViewModel.loginDataChanged(
@@ -93,7 +115,7 @@ class LoginActivity : AppCompatActivity() {
             }
 
             login.setOnClickListener {
-                //loading.visibility = View.VISIBLE
+                loading.visibility = View.VISIBLE
                 loginViewModel.login(username.text.toString(), password.text.toString())
             }
         }
@@ -104,16 +126,24 @@ class LoginActivity : AppCompatActivity() {
         val displayName = model.displayName
         // TODO : initiate successful logged in experience
         Toast.makeText(
-            applicationContext,
+            requireContext(),
             "$welcome $displayName",
             Toast.LENGTH_LONG
         ).show()
+
+       findNavController().navigate(R.id.action_loginFragment2_to_dashboardFragment2, args = bundleOf(Pair("KEY_USER",model)))
     }
 
     private fun showLoginFailed(@StringRes errorString: Int) {
-        Toast.makeText(applicationContext, errorString, Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), errorString, Toast.LENGTH_SHORT).show()
     }
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+    }
+
 }
+
 
 /**
  * Extension function to simplify setting an afterTextChanged action to EditText components.
